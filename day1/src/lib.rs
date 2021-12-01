@@ -1,23 +1,15 @@
-use itertools::Itertools;
-
 pub fn part1(input: &Vec<usize>) -> usize {
     input
-        .iter()
-        .tuple_windows()
-        .fold(0, |acc, (a, b)| if b > a { acc + 1 } else { acc })
+        .windows(2)
+        .filter(|w| w[1] > w[0])
+        .count()
 }
 
 pub fn part2(input: &Vec<usize>) -> usize {
     input
-        .iter()
-        .tuple_windows::<(_, _, _)>()
-        .fold(Vec::new(), |mut acc, (a, b, c)| {
-            acc.push(a + b + c);
-            acc
-        })
-        .iter()
-        .tuple_windows::<(_, _)>()
-        .fold(0, |acc, (a, b)| if b > a { acc + 1 } else { acc })
+        .windows(4)
+        .filter(|w| w[3] > w[0])
+        .count()
 }
 
 #[cfg(test)]
