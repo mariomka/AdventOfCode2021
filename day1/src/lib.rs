@@ -1,13 +1,15 @@
 use itertools::Itertools;
 
 pub fn part1(input: &Vec<usize>) -> usize {
-    input.iter()
+    input
+        .iter()
         .tuple_windows()
         .fold(0, |acc, (a, b)| if b > a { acc + 1 } else { acc })
 }
 
 pub fn part2(input: &Vec<usize>) -> usize {
-    input.iter()
+    input
+        .iter()
         .tuple_windows::<(_, _, _)>()
         .fold(Vec::new(), |mut acc, (a, b, c)| {
             acc.push(a + b + c);
@@ -20,7 +22,7 @@ pub fn part2(input: &Vec<usize>) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use helpers::{parse_input};
+    use helpers::parse_input;
 
     use super::*;
 
