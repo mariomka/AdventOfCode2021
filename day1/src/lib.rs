@@ -1,15 +1,9 @@
 pub fn part1(input: &Vec<usize>) -> usize {
-    input
-        .windows(2)
-        .filter(|w| w[1] > w[0])
-        .count()
+    input.windows(2).filter(|w| w[1] > w[0]).count()
 }
 
 pub fn part2(input: &Vec<usize>) -> usize {
-    input
-        .windows(4)
-        .filter(|w| w[3] > w[0])
-        .count()
+    input.windows(4).filter(|w| w[3] > w[0]).count()
 }
 
 #[cfg(test)]
