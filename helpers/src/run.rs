@@ -23,7 +23,7 @@ where
 
     writeln!(
         &mut writer,
-        "{}: {} ({:.2?})",
+        "{}: {} ({:.2?})\n",
         name,
         solution,
         now.elapsed()
