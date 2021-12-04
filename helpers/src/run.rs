@@ -21,9 +21,9 @@ where
 {
     let solution = solver();
 
-    writeln!(
+    write!(
         &mut writer,
-        "{}: {} ({:.2?})\n",
+        "{}: {} ({:.2?})\n\n",
         name,
         solution,
         now.elapsed()
@@ -54,6 +54,6 @@ mod tests {
         });
         let output = String::from_utf8(output).expect("Not UTF-8");
 
-        assert_eq!(output, "test: 3066 (10.00ms)\n");
+        assert_eq!(output, "test: 3066 (10.00ms)\n\n");
     }
 }
