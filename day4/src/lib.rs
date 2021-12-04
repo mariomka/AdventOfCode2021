@@ -65,10 +65,10 @@ pub fn part2(input: &Vec<&str>) -> usize {
         }
     }
 
-    let looser = loser.unwrap();
-    // debug!(looser);
+    let loser = loser.unwrap();
+    // debug!(loser);
 
-    looser.score(last_number)
+    loser.score(last_number)
 }
 
 fn parse_numbers(input: &Vec<&str>) -> Vec<usize> {
