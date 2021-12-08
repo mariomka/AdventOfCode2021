@@ -59,20 +59,17 @@ pub fn part2(lines: &Vec<&str>) -> usize {
             }
         }
 
-        let four_seven_diff: HashSet<char> = numbers[4]
-            .as_ref()
-            .unwrap()
-            .symmetric_difference(&numbers[7].as_ref().unwrap())
-            .cloned()
-            .collect();
-
         for zero_six_or_nine in numbers_by_segments.get(&6).unwrap() {
             if 4 == zero_six_or_nine
                 .intersection(numbers[4].as_ref().unwrap())
                 .count()
             {
                 numbers[9] = Some(zero_six_or_nine.to_owned());
-            } else if 3 == zero_six_or_nine.intersection(&four_seven_diff).count() {
+            } else if 1
+                == zero_six_or_nine
+                    .intersection(numbers[1].as_ref().unwrap())
+                    .count()
+            {
                 numbers[6] = Some(zero_six_or_nine.to_owned());
             } else {
                 numbers[0] = Some(zero_six_or_nine.to_owned());
