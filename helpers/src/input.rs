@@ -1,3 +1,4 @@
+use crate::Grid;
 use std::fmt::Debug;
 use std::iter::FromIterator;
 use std::str::FromStr;
@@ -22,6 +23,29 @@ where
         .map(|line| line.trim())
         .filter(|line| false == line.is_empty())
         .collect()
+}
+
+pub fn input_grid<'a, R>(input: &'a str) -> Grid<R>
+where
+    R: FromStr,
+    <R as FromStr>::Err: Debug,
+{
+    let lines: Vec<&str> = input
+        .lines()
+        .map(|line| line.trim())
+        .filter(|line| false == line.is_empty())
+        .collect();
+
+    let size = (lines[0].len(), lines.len());
+    let mut data: Vec<R> = Vec::with_capacity(size.0 * size.1);
+
+    for line in lines {
+        for element in line.split("").filter(|&x| !x.is_empty()) {
+            data.push(element.parse().unwrap());
+        }
+    }
+
+    Grid::new(size, data)
 }
 
 pub fn parse_split_input<T: FromStr, R>(input: &str, pattern: &str) -> R
