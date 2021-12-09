@@ -7,7 +7,7 @@ pub fn part1(input: &Grid<usize>) -> usize {
 }
 
 pub fn part2(input: &Grid<usize>) -> usize {
-    let mut basins: Vec<usize> = get_low_points(&input)
+    let mut basins: Vec<usize> = get_low_points(input)
         .iter()
         .map(|low_point| get_basin_coords(&input, low_point.0, low_point.1).len())
         .collect();
