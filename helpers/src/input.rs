@@ -149,6 +149,33 @@ mod tests {
     }
 
     #[test]
+    fn test_input_grid() {
+        let input = "
+abcd
+efgh
+ijkl
+mnop
+qrst
+        ";
+
+        let result: Grid<char> = input_grid(input);
+
+        let expected = Grid::new(
+            (4, 5),
+            [
+                'a', 'b', 'c', 'd', //
+                'e', 'f', 'g', 'h', //
+                'i', 'j', 'k', 'l', //
+                'm', 'n', 'o', 'p', //
+                'q', 'r', 's', 't', //
+            ]
+            .to_vec(),
+        );
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
     fn test_parse_input_to_vec() {
         let input = "
             1721

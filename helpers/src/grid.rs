@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Formatter};
+
 pub type Coord = (usize, usize);
 
 pub struct Grid<T> {
@@ -38,6 +40,26 @@ impl<T> Grid<T> {
         assert!(coord.1 < self.size.1);
 
         coord.0 + coord.1 * self.size.0
+    }
+}
+
+impl<T: Debug> Debug for Grid<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        for (index, cell) in self.cells.iter().enumerate() {
+            write!(f, "{:?} ", cell)?;
+
+            if 0 == (index + 1) % self.size.0 {
+                writeln!(f)?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl<T: PartialEq> PartialEq for Grid<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.cells == other.cells
     }
 }
 
