@@ -5,9 +5,7 @@ pub fn part1(input: Grid<usize>) -> usize {
     let mut flashes = 0;
 
     for _ in 0..100 {
-        let (new_grid, new_flashes) = step(&grid);
-        flashes += new_flashes;
-        grid = new_grid;
+        flashes += step(&mut grid);
     }
 
     flashes
@@ -18,24 +16,19 @@ pub fn part2(input: Grid<usize>) -> usize {
     let mut steps = 0;
 
     loop {
-        let (new_grid, new_flashes) = step(&grid);
+        let flashes = step(&mut grid);
         steps += 1;
 
-        if new_flashes == new_grid.len() {
+        if flashes == grid.len() {
             return steps;
         }
-
-        grid = new_grid;
     }
 }
 
-fn step(grid: &Grid<usize>) -> (Grid<usize>, usize) {
-    let mut grid: Grid<usize> = grid
-        .into_iter()
-        .map(|(coord, energy)| (coord, energy + 1))
-        .collect();
+fn step(grid: &mut Grid<usize>) -> usize {
+    grid.iter_mut().for_each(|(_, energy)| *energy += 1);
 
-    apply_flashes(&mut grid);
+    apply_flashes(grid);
 
     let flashed: Vec<(Coord, usize)> = grid.into_iter().filter(|(_, energy)| *energy > 9).collect();
     let flashes = flashed.len();
@@ -44,7 +37,7 @@ fn step(grid: &Grid<usize>) -> (Grid<usize>, usize) {
         grid.set(coord, 0);
     }
 
-    (grid, flashes)
+    flashes
 }
 
 fn apply_flashes(grid: &mut Grid<usize>) {

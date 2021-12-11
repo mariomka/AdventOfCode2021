@@ -41,6 +41,17 @@ where
         )
     }
 
+    pub fn iter_mut<'a>(&'a mut self) -> Box<dyn Iterator<Item = (Coord, &'a mut T)> + 'a> {
+        let size = self.size;
+
+        Box::new(
+            self.cells
+                .iter_mut()
+                .enumerate()
+                .map(move |(index, cell)| ((index % size.0, index / size.0), cell)),
+        )
+    }
+
     pub fn neighbors_iter(&self, coord: Coord, with_diagonals: bool) -> NeighborIter<T> {
         assert!(coord.0 < self.size.0);
         assert!(coord.1 < self.size.1);
@@ -283,6 +294,21 @@ mod tests {
         assert_eq!(iter.next(), Some(((2, 4), 's')));
         assert_eq!(iter.next(), Some(((3, 4), 't')));
         assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_iter_mul_cells() {
+        let mut grid = create_grid();
+
+        {
+            let mut iter = grid.iter_mut();
+            let next = iter.next();
+            let (coord, value) = next.unwrap();
+            *value = 'x';
+            assert_eq!(coord, (0, 0));
+        }
+
+        assert_eq!(grid.get((0, 0)), 'x');
     }
 
     #[test]
