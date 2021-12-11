@@ -27,7 +27,7 @@ where
 
 pub fn input_grid<'a, R>(input: &'a str) -> Grid<R>
 where
-    R: FromStr,
+    R: FromStr + Clone,
     <R as FromStr>::Err: Debug,
 {
     let lines: Vec<&str> = input

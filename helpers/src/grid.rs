@@ -1,38 +1,42 @@
 use std::fmt::{Debug, Formatter};
+use std::iter::FromIterator;
 
 pub type Coord = (usize, usize);
 
+#[derive(Clone)]
 pub struct Grid<T> {
     pub size: (usize, usize),
     cells: Vec<T>,
 }
 
-impl<T> Grid<T> {
+impl<T> Grid<T>
+where
+    T: Clone,
+{
     pub fn new(size: (usize, usize), cells: Vec<T>) -> Self {
         assert_eq!(size.0 * size.1, cells.len());
 
         Grid { size, cells }
     }
 
-    pub fn cell(&self, coord: Coord) -> &T {
-        &self.cells[self.index(coord)]
+    pub fn len(&self) -> usize {
+        self.size.0 * self.size.1
     }
 
-    pub fn neighbors(&self, coord: Coord) -> Vec<(Coord, &T)> {
-        let mut neighbors = Vec::with_capacity(4);
-
-        for neighbor_coord in self.neighbor_coord_iter(coord) {
-            neighbors.push((neighbor_coord, self.cell(neighbor_coord)));
-        }
-
-        neighbors
+    pub fn get(&self, coord: Coord) -> T {
+        self.cells[self.index(coord)].clone()
     }
 
-    fn neighbor_coord_iter(&self, coord: Coord) -> NeighborIterator<T> {
+    pub fn set(&mut self, coord: Coord, value: T) {
+        let index = self.index(coord);
+        self.cells[index] = value;
+    }
+
+    pub fn neighbors_iter(&self, coord: Coord, with_diagonals: bool) -> NeighborIter<T> {
         assert!(coord.0 < self.size.0);
         assert!(coord.1 < self.size.1);
 
-        NeighborIterator::new(&self, coord)
+        NeighborIter::new(&self, coord, with_diagonals)
     }
 
     fn index(&self, coord: Coord) -> usize {
@@ -45,6 +49,8 @@ impl<T> Grid<T> {
 
 impl<T: Debug> Debug for Grid<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        writeln!(f)?;
+
         for (index, cell) in self.cells.iter().enumerate() {
             write!(f, "{:?} ", cell)?;
 
@@ -63,40 +69,169 @@ impl<T: PartialEq> PartialEq for Grid<T> {
     }
 }
 
-struct NeighborIterator<'a, T> {
-    grid: &'a Grid<T>,
-    coord: Coord,
-    visited: Vec<usize>,
+impl<T> FromIterator<(Coord, T)> for Grid<T>
+where
+    T: Clone,
+{
+    fn from_iter<K: IntoIterator<Item = (Coord, T)>>(iter: K) -> Self {
+        let mut cells = Vec::new();
+        let mut size = (0, 0);
+
+        for (coord, value) in iter.into_iter() {
+            cells.push(value);
+
+            if coord.0 > size.0 {
+                size.0 = coord.0;
+            }
+
+            if coord.1 > size.1 {
+                size.1 = coord.1;
+            }
+        }
+
+        Grid::new((size.0 + 1, size.1 + 1), cells)
+    }
 }
 
-impl<'a, T> NeighborIterator<'a, T> {
-    pub fn new(grid: &'a Grid<T>, coord: Coord) -> Self {
-        NeighborIterator {
-            grid,
-            coord,
-            visited: vec![],
+impl<'a, T: Clone> IntoIterator for &'a Grid<T> {
+    type Item = (Coord, T);
+    type IntoIter = GridIter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        GridIter {
+            grid: self,
+            index: 0,
         }
     }
 }
 
-impl<'a, T> Iterator for NeighborIterator<'a, T> {
+pub struct GridIter<'a, T> {
+    grid: &'a Grid<T>,
+    index: usize,
+}
+
+impl<'a, T: Clone> Iterator for GridIter<'a, T> {
+    type Item = (Coord, T);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.grid.size.0 * self.grid.size.1 {
+            return None;
+        }
+
+        let coord = (self.index % self.grid.size.0, self.index / self.grid.size.0);
+        let cell = self.grid.get(coord);
+        self.index += 1;
+
+        return Some((coord, cell));
+    }
+}
+
+struct NeighborCoordIter<'a, T> {
+    grid: &'a Grid<T>,
+    coord: Coord,
+    visited: Vec<usize>,
+    with_diagonals: bool,
+}
+
+impl<'a, T> NeighborCoordIter<'a, T> {
+    pub fn new(grid: &'a Grid<T>, coord: Coord, with_diagonals: bool) -> Self {
+        NeighborCoordIter {
+            grid,
+            coord,
+            visited: vec![],
+            with_diagonals,
+        }
+    }
+}
+
+impl<'a, T> Iterator for NeighborCoordIter<'a, T> {
     type Item = Coord;
 
     fn next(&mut self) -> Option<Self::Item> {
+        // Left
         if !self.visited.contains(&0) && self.coord.0 != 0 {
             self.visited.push(0);
             Some((self.coord.0 - 1, self.coord.1))
-        } else if !self.visited.contains(&1) && self.coord.1 != 0 {
+        } else
+        // Left-top
+        if self.with_diagonals
+            && !self.visited.contains(&1)
+            && self.coord.0 != 0
+            && self.coord.1 != 0
+        {
             self.visited.push(1);
-            Some((self.coord.0, self.coord.1 - 1))
-        } else if !self.visited.contains(&2) && self.coord.0 + 1 != self.grid.size.0 {
+            Some((self.coord.0 - 1, self.coord.1 - 1))
+        } else
+        // Top
+        if !self.visited.contains(&2) && self.coord.1 != 0 {
             self.visited.push(2);
-            Some((self.coord.0 + 1, self.coord.1))
-        } else if !self.visited.contains(&3) && self.coord.1 + 1 != self.grid.size.1 {
+            Some((self.coord.0, self.coord.1 - 1))
+        } else
+        // Top-right
+        if self.with_diagonals
+            && !self.visited.contains(&3)
+            && self.coord.0 + 1 != self.grid.size.0
+            && self.coord.1 != 0
+        {
             self.visited.push(3);
+            Some((self.coord.0 + 1, self.coord.1 - 1))
+        } else
+        // Right
+        if !self.visited.contains(&4) && self.coord.0 + 1 != self.grid.size.0 {
+            self.visited.push(4);
+            Some((self.coord.0 + 1, self.coord.1))
+        } else
+        // Bottom-right
+        if self.with_diagonals
+            && !self.visited.contains(&5)
+            && self.coord.0 + 1 != self.grid.size.0
+            && self.coord.1 + 1 != self.grid.size.1
+        {
+            self.visited.push(5);
+            Some((self.coord.0 + 1, self.coord.1 + 1))
+        } else
+        // Bottom
+        if !self.visited.contains(&6) && self.coord.1 + 1 != self.grid.size.1 {
+            self.visited.push(6);
             Some((self.coord.0, self.coord.1 + 1))
+        } else
+        // Bottom-left
+        if self.with_diagonals
+            && !self.visited.contains(&7)
+            && self.coord.0 != 0
+            && self.coord.1 + 1 != self.grid.size.1
+        {
+            self.visited.push(7);
+            Some((self.coord.0 - 1, self.coord.1 + 1))
         } else {
             None
+        }
+    }
+}
+
+pub struct NeighborIter<'a, T> {
+    grid: &'a Grid<T>,
+    coord_iter: NeighborCoordIter<'a, T>,
+}
+
+impl<'a, T> NeighborIter<'a, T> {
+    pub fn new(grid: &'a Grid<T>, coord: Coord, with_diagonals: bool) -> Self {
+        NeighborIter {
+            grid,
+            coord_iter: NeighborCoordIter::new(grid, coord, with_diagonals),
+        }
+    }
+}
+
+impl<'a, T: Clone> Iterator for NeighborIter<'a, T> {
+    type Item = (Coord, T);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let coord = self.coord_iter.next();
+
+        match coord {
+            None => None,
+            Some(coord) => Some((coord, self.grid.get(coord))),
         }
     }
 }
@@ -120,38 +255,122 @@ mod tests {
     }
 
     #[test]
-    fn test_get_a_cell() {
+    fn test_len() {
         let grid = create_grid();
-        assert_eq!(*grid.cell((0, 0)), 'a');
-        assert_eq!(*grid.cell((2, 3)), 'o');
-        assert_eq!(*grid.cell((3, 4)), 't');
+        assert_eq!(grid.len(), 20);
     }
 
     #[test]
-    fn test_get_the_cell_neighbors() {
+    fn test_get() {
+        let grid = create_grid();
+        assert_eq!(grid.get((0, 0)), 'a');
+        assert_eq!(grid.get((2, 3)), 'o');
+        assert_eq!(grid.get((3, 4)), 't');
+    }
+
+    #[test]
+    fn test_set() {
+        let mut grid = create_grid();
+        assert_eq!(grid.get((2, 3)), 'o');
+
+        grid.set((2, 3), 'x');
+        assert_eq!(grid.get((2, 3)), 'x');
+    }
+
+    #[test]
+    fn test_iter_cells() {
+        let grid = create_grid();
+        let mut iter = grid.into_iter();
+
+        assert_eq!(iter.next(), Some(((0, 0), 'a')));
+        assert_eq!(iter.next(), Some(((1, 0), 'b')));
+        assert_eq!(iter.next(), Some(((2, 0), 'c')));
+        assert_eq!(iter.next(), Some(((3, 0), 'd')));
+        assert_eq!(iter.next(), Some(((0, 1), 'e')));
+        assert_eq!(iter.next(), Some(((1, 1), 'f')));
+        assert_eq!(iter.next(), Some(((2, 1), 'g')));
+        assert_eq!(iter.next(), Some(((3, 1), 'h')));
+        assert_eq!(iter.next(), Some(((0, 2), 'i')));
+        assert_eq!(iter.next(), Some(((1, 2), 'j')));
+        assert_eq!(iter.next(), Some(((2, 2), 'k')));
+        assert_eq!(iter.next(), Some(((3, 2), 'l')));
+        assert_eq!(iter.next(), Some(((0, 3), 'm')));
+        assert_eq!(iter.next(), Some(((1, 3), 'n')));
+        assert_eq!(iter.next(), Some(((2, 3), 'o')));
+        assert_eq!(iter.next(), Some(((3, 3), 'p')));
+        assert_eq!(iter.next(), Some(((0, 4), 'q')));
+        assert_eq!(iter.next(), Some(((1, 4), 'r')));
+        assert_eq!(iter.next(), Some(((2, 4), 's')));
+        assert_eq!(iter.next(), Some(((3, 4), 't')));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_iter_cell_neighbors() {
         let grid = create_grid();
 
         assert_eq!(
-            grid.neighbors((0, 0)),
-            [((1, 0), &'b'), ((0, 1), &'e')].to_vec()
+            grid.neighbors_iter((0, 0), false)
+                .collect::<Vec<(Coord, char)>>(),
+            [((1, 0), 'b'), ((0, 1), 'e')].to_vec()
         );
         assert_eq!(
-            grid.neighbors((2, 0)),
-            [((1, 0), &'b'), ((3, 0), &'d'), ((2, 1), &'g')].to_vec()
+            grid.neighbors_iter((2, 0), false)
+                .collect::<Vec<(Coord, char)>>(),
+            [((1, 0), 'b'), ((3, 0), 'd'), ((2, 1), 'g')].to_vec()
         );
         assert_eq!(
-            grid.neighbors((1, 2)),
+            grid.neighbors_iter((1, 2), false)
+                .collect::<Vec<(Coord, char)>>(),
+            [((0, 2), 'i'), ((1, 1), 'f'), ((2, 2), 'k'), ((1, 3), 'n')].to_vec()
+        );
+        assert_eq!(
+            grid.neighbors_iter((3, 4), false)
+                .collect::<Vec<(Coord, char)>>(),
+            [((2, 4), 's'), ((3, 3), 'p')].to_vec()
+        );
+    }
+
+    #[test]
+    fn test_get_the_cell_neighbors_with_diagonals() {
+        let grid = create_grid();
+
+        assert_eq!(
+            grid.neighbors_iter((0, 0), true)
+                .collect::<Vec<(Coord, char)>>(),
+            [((1, 0), 'b'), ((1, 1), 'f'), ((0, 1), 'e')].to_vec()
+        );
+        assert_eq!(
+            grid.neighbors_iter((2, 0), true)
+                .collect::<Vec<(Coord, char)>>(),
             [
-                ((0, 2), &'i'),
-                ((1, 1), &'f'),
-                ((2, 2), &'k'),
-                ((1, 3), &'n')
+                ((1, 0), 'b'),
+                ((3, 0), 'd'),
+                ((3, 1), 'h'),
+                ((2, 1), 'g'),
+                ((1, 1), 'f')
             ]
             .to_vec()
         );
         assert_eq!(
-            grid.neighbors((3, 4)),
-            [((2, 4), &'s'), ((3, 3), &'p')].to_vec()
+            grid.neighbors_iter((1, 2), true)
+                .collect::<Vec<(Coord, char)>>(),
+            [
+                ((0, 2), 'i'),
+                ((0, 1), 'e'),
+                ((1, 1), 'f'),
+                ((2, 1), 'g'),
+                ((2, 2), 'k'),
+                ((2, 3), 'o'),
+                ((1, 3), 'n'),
+                ((0, 3), 'm')
+            ]
+            .to_vec()
+        );
+        assert_eq!(
+            grid.neighbors_iter((3, 4), true)
+                .collect::<Vec<(Coord, char)>>(),
+            [((2, 4), 's'), ((2, 3), 'o'), ((3, 3), 'p')].to_vec()
         );
     }
 }
