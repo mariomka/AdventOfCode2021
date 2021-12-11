@@ -32,6 +32,15 @@ where
         self.cells[index] = value;
     }
 
+    pub fn into_iter<'a>(&'a self) -> Box<dyn Iterator<Item = (Coord, T)> + 'a> {
+        Box::new(
+            self.cells
+                .iter()
+                .enumerate()
+                .map(move |(index, cell)| (self.coord(index), cell.clone())),
+        )
+    }
+
     pub fn neighbors_iter(&self, coord: Coord, with_diagonals: bool) -> NeighborIter<T> {
         assert!(coord.0 < self.size.0);
         assert!(coord.1 < self.size.1);
@@ -44,6 +53,10 @@ where
         assert!(coord.1 < self.size.1);
 
         coord.0 + coord.1 * self.size.0
+    }
+
+    fn coord(&self, index: usize) -> Coord {
+        (index % self.size.0, index / self.size.0)
     }
 }
 
@@ -90,39 +103,6 @@ where
         }
 
         Grid::new((size.0 + 1, size.1 + 1), cells)
-    }
-}
-
-impl<'a, T: Clone> IntoIterator for &'a Grid<T> {
-    type Item = (Coord, T);
-    type IntoIter = GridIter<'a, T>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        GridIter {
-            grid: self,
-            index: 0,
-        }
-    }
-}
-
-pub struct GridIter<'a, T> {
-    grid: &'a Grid<T>,
-    index: usize,
-}
-
-impl<'a, T: Clone> Iterator for GridIter<'a, T> {
-    type Item = (Coord, T);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index >= self.grid.size.0 * self.grid.size.1 {
-            return None;
-        }
-
-        let coord = (self.index % self.grid.size.0, self.index / self.grid.size.0);
-        let cell = self.grid.get(coord);
-        self.index += 1;
-
-        return Some((coord, cell));
     }
 }
 
@@ -278,7 +258,7 @@ mod tests {
     }
 
     #[test]
-    fn test_iter_cells() {
+    fn test_into_iter_cells() {
         let grid = create_grid();
         let mut iter = grid.into_iter();
 
