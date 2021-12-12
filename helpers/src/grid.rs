@@ -32,12 +32,12 @@ where
         self.cells[index] = value;
     }
 
-    pub fn into_iter<'a>(&'a self) -> Box<dyn Iterator<Item = (Coord, T)> + 'a> {
+    pub fn iter<'a>(&'a self) -> Box<dyn Iterator<Item = (Coord, &T)> + 'a> {
         Box::new(
             self.cells
                 .iter()
                 .enumerate()
-                .map(move |(index, cell)| (self.coord(index), cell.clone())),
+                .map(move |(index, cell)| (self.coord(index), cell)),
         )
     }
 
@@ -269,30 +269,30 @@ mod tests {
     }
 
     #[test]
-    fn test_into_iter_cells() {
+    fn test_iter_cells() {
         let grid = create_grid();
-        let mut iter = grid.into_iter();
+        let mut iter = grid.iter();
 
-        assert_eq!(iter.next(), Some(((0, 0), 'a')));
-        assert_eq!(iter.next(), Some(((1, 0), 'b')));
-        assert_eq!(iter.next(), Some(((2, 0), 'c')));
-        assert_eq!(iter.next(), Some(((3, 0), 'd')));
-        assert_eq!(iter.next(), Some(((0, 1), 'e')));
-        assert_eq!(iter.next(), Some(((1, 1), 'f')));
-        assert_eq!(iter.next(), Some(((2, 1), 'g')));
-        assert_eq!(iter.next(), Some(((3, 1), 'h')));
-        assert_eq!(iter.next(), Some(((0, 2), 'i')));
-        assert_eq!(iter.next(), Some(((1, 2), 'j')));
-        assert_eq!(iter.next(), Some(((2, 2), 'k')));
-        assert_eq!(iter.next(), Some(((3, 2), 'l')));
-        assert_eq!(iter.next(), Some(((0, 3), 'm')));
-        assert_eq!(iter.next(), Some(((1, 3), 'n')));
-        assert_eq!(iter.next(), Some(((2, 3), 'o')));
-        assert_eq!(iter.next(), Some(((3, 3), 'p')));
-        assert_eq!(iter.next(), Some(((0, 4), 'q')));
-        assert_eq!(iter.next(), Some(((1, 4), 'r')));
-        assert_eq!(iter.next(), Some(((2, 4), 's')));
-        assert_eq!(iter.next(), Some(((3, 4), 't')));
+        assert_eq!(iter.next(), Some(((0, 0), &'a')));
+        assert_eq!(iter.next(), Some(((1, 0), &'b')));
+        assert_eq!(iter.next(), Some(((2, 0), &'c')));
+        assert_eq!(iter.next(), Some(((3, 0), &'d')));
+        assert_eq!(iter.next(), Some(((0, 1), &'e')));
+        assert_eq!(iter.next(), Some(((1, 1), &'f')));
+        assert_eq!(iter.next(), Some(((2, 1), &'g')));
+        assert_eq!(iter.next(), Some(((3, 1), &'h')));
+        assert_eq!(iter.next(), Some(((0, 2), &'i')));
+        assert_eq!(iter.next(), Some(((1, 2), &'j')));
+        assert_eq!(iter.next(), Some(((2, 2), &'k')));
+        assert_eq!(iter.next(), Some(((3, 2), &'l')));
+        assert_eq!(iter.next(), Some(((0, 3), &'m')));
+        assert_eq!(iter.next(), Some(((1, 3), &'n')));
+        assert_eq!(iter.next(), Some(((2, 3), &'o')));
+        assert_eq!(iter.next(), Some(((3, 3), &'p')));
+        assert_eq!(iter.next(), Some(((0, 4), &'q')));
+        assert_eq!(iter.next(), Some(((1, 4), &'r')));
+        assert_eq!(iter.next(), Some(((2, 4), &'s')));
+        assert_eq!(iter.next(), Some(((3, 4), &'t')));
         assert_eq!(iter.next(), None);
     }
 

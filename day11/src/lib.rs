@@ -30,10 +30,14 @@ fn step(grid: &mut Grid<usize>) -> usize {
 
     apply_flashes(grid);
 
-    let flashed: Vec<(Coord, usize)> = grid.into_iter().filter(|(_, energy)| *energy > 9).collect();
+    let flashed: Vec<(Coord, usize)> = grid
+        .iter()
+        .filter(|(_, &energy)| energy > 9)
+        .map(|(coord, energy)| (coord, energy.to_owned()))
+        .collect();
     let flashes = flashed.len();
 
-    for (coord, _) in flashed.into_iter() {
+    for (coord, _) in flashed {
         grid.set(coord, 0);
     }
 
@@ -42,15 +46,16 @@ fn step(grid: &mut Grid<usize>) -> usize {
 
 fn apply_flashes(grid: &mut Grid<usize>) {
     let will_flash: Vec<(Coord, usize)> = grid
-        .into_iter()
-        .filter(|(_, energy)| *energy > 9 && *energy < 100)
+        .iter()
+        .filter(|(_, &energy)| energy > 9 && energy < 100)
+        .map(|(coord, energy)| (coord, energy.to_owned()))
         .collect();
 
     if will_flash.len() == 0 {
         return;
     }
 
-    for (coord, _) in will_flash.into_iter() {
+    for (coord, _) in will_flash {
         for (neighbor_coord, energy) in grid
             .neighbors_iter(coord, true)
             .collect::<Vec<(Coord, usize)>>()
