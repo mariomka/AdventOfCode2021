@@ -24,6 +24,11 @@ impl<T> Grid<T> {
         &self.cells[self.index(coord)]
     }
 
+    pub fn get_mut<'a>(&'a mut self, coord: Coord) -> &'a mut T {
+        let index = self.index(coord);
+        self.cells.get_mut(index).unwrap()
+    }
+
     pub fn set(&mut self, coord: Coord, value: T) {
         let index = self.index(coord);
         self.cells[index] = value;
@@ -45,7 +50,7 @@ impl<T> Grid<T> {
             self.cells
                 .iter_mut()
                 .enumerate()
-                .map(move |(index, cell)| ((index % size.0, index / size.0), cell)),
+                .map(move |(index, cell)| (Self::_coord(size, index), cell)),
         )
     }
 
@@ -64,7 +69,11 @@ impl<T> Grid<T> {
     }
 
     fn coord(&self, index: usize) -> Coord {
-        (index % self.size.0, index / self.size.0)
+        Self::_coord(self.size, index)
+    }
+
+    fn _coord(size: (usize, usize), index: usize) -> Coord {
+        (index % size.0, index / size.0)
     }
 }
 
@@ -254,6 +263,18 @@ mod tests {
     }
 
     #[test]
+    fn test_get_mut() {
+        let mut grid = create_grid();
+
+        assert_eq!(grid.get((2, 3)), &'o');
+
+        let cell = grid.get_mut((2, 3));
+        *cell = 'x';
+
+        assert_eq!(grid.get((2, 3)), &'x');
+    }
+
+    #[test]
     fn test_set() {
         let mut grid = create_grid();
         assert_eq!(grid.get((2, 3)), &'o');
@@ -291,7 +312,7 @@ mod tests {
     }
 
     #[test]
-    fn test_iter_mul_cells() {
+    fn test_iter_mut_cells() {
         let mut grid = create_grid();
 
         {
