@@ -23,9 +23,9 @@ fn get_low_points(grid: &Grid<usize>) -> Vec<(usize, Coord)> {
 
     for x in 0..grid.size.0 {
         'outer: for y in 0..grid.size.1 {
-            let current_height = grid.get((x, y));
+            let &current_height = grid.get((x, y));
 
-            for (_, neighbor_height) in grid.neighbors_iter((x, y), false) {
+            for (_, &neighbor_height) in grid.neighbors_iter((x, y), false) {
                 if neighbor_height <= current_height {
                     continue 'outer;
                 }
@@ -41,7 +41,7 @@ fn get_low_points(grid: &Grid<usize>) -> Vec<(usize, Coord)> {
 fn get_basin_coords(grid: &Grid<usize>, current_height: usize, coord: Coord) -> Vec<Coord> {
     let mut positions: Vec<Coord> = vec![coord];
 
-    for (neighbor_coord, neighbor_height) in grid.neighbors_iter(coord, false) {
+    for (neighbor_coord, &neighbor_height) in grid.neighbors_iter(coord, false) {
         if neighbor_height < 9 && neighbor_height > current_height {
             positions.append(&mut get_basin_coords(grid, neighbor_height, neighbor_coord));
         }

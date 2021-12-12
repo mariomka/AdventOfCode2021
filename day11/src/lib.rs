@@ -58,6 +58,7 @@ fn apply_flashes(grid: &mut Grid<usize>) {
     for (coord, _) in will_flash {
         for (neighbor_coord, energy) in grid
             .neighbors_iter(coord, true)
+            .map(|(coord, &energy)| (coord, energy.to_owned()))
             .collect::<Vec<(Coord, usize)>>()
         {
             grid.set(neighbor_coord, energy + 1);

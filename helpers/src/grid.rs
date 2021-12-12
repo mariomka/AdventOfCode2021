@@ -9,10 +9,7 @@ pub struct Grid<T> {
     cells: Vec<T>,
 }
 
-impl<T> Grid<T>
-where
-    T: Clone,
-{
+impl<T> Grid<T> {
     pub fn new(size: (usize, usize), cells: Vec<T>) -> Self {
         assert_eq!(size.0 * size.1, cells.len());
 
@@ -23,8 +20,8 @@ where
         self.size.0 * self.size.1
     }
 
-    pub fn get(&self, coord: Coord) -> T {
-        self.cells[self.index(coord)].clone()
+    pub fn get(&self, coord: Coord) -> &T {
+        &self.cells[self.index(coord)]
     }
 
     pub fn set(&mut self, coord: Coord, value: T) {
@@ -93,10 +90,7 @@ impl<T: PartialEq> PartialEq for Grid<T> {
     }
 }
 
-impl<T> FromIterator<(Coord, T)> for Grid<T>
-where
-    T: Clone,
-{
+impl<T> FromIterator<(Coord, T)> for Grid<T> {
     fn from_iter<K: IntoIterator<Item = (Coord, T)>>(iter: K) -> Self {
         let mut cells = Vec::new();
         let mut size = (0, 0);
@@ -214,15 +208,15 @@ impl<'a, T> NeighborIter<'a, T> {
     }
 }
 
-impl<'a, T: Clone> Iterator for NeighborIter<'a, T> {
-    type Item = (Coord, T);
+impl<'a, T> Iterator for NeighborIter<'a, T> {
+    type Item = (Coord, &'a T);
 
     fn next(&mut self) -> Option<Self::Item> {
         let coord = self.coord_iter.next();
 
         match coord {
             None => None,
-            Some(coord) => Some((coord, self.grid.get(coord))),
+            Some(coord) => Some((coord, &self.grid.get(coord))),
         }
     }
 }
@@ -254,18 +248,18 @@ mod tests {
     #[test]
     fn test_get() {
         let grid = create_grid();
-        assert_eq!(grid.get((0, 0)), 'a');
-        assert_eq!(grid.get((2, 3)), 'o');
-        assert_eq!(grid.get((3, 4)), 't');
+        assert_eq!(grid.get((0, 0)), &'a');
+        assert_eq!(grid.get((2, 3)), &'o');
+        assert_eq!(grid.get((3, 4)), &'t');
     }
 
     #[test]
     fn test_set() {
         let mut grid = create_grid();
-        assert_eq!(grid.get((2, 3)), 'o');
+        assert_eq!(grid.get((2, 3)), &'o');
 
         grid.set((2, 3), 'x');
-        assert_eq!(grid.get((2, 3)), 'x');
+        assert_eq!(grid.get((2, 3)), &'x');
     }
 
     #[test]
@@ -308,7 +302,7 @@ mod tests {
             assert_eq!(coord, (0, 0));
         }
 
-        assert_eq!(grid.get((0, 0)), 'x');
+        assert_eq!(grid.get((0, 0)), &'x');
     }
 
     #[test]
@@ -317,23 +311,29 @@ mod tests {
 
         assert_eq!(
             grid.neighbors_iter((0, 0), false)
-                .collect::<Vec<(Coord, char)>>(),
-            [((1, 0), 'b'), ((0, 1), 'e')].to_vec()
+                .collect::<Vec<(Coord, &char)>>(),
+            [((1, 0), &'b'), ((0, 1), &'e')].to_vec()
         );
         assert_eq!(
             grid.neighbors_iter((2, 0), false)
-                .collect::<Vec<(Coord, char)>>(),
-            [((1, 0), 'b'), ((3, 0), 'd'), ((2, 1), 'g')].to_vec()
+                .collect::<Vec<(Coord, &char)>>(),
+            [((1, 0), &'b'), ((3, 0), &'d'), ((2, 1), &'g')].to_vec()
         );
         assert_eq!(
             grid.neighbors_iter((1, 2), false)
-                .collect::<Vec<(Coord, char)>>(),
-            [((0, 2), 'i'), ((1, 1), 'f'), ((2, 2), 'k'), ((1, 3), 'n')].to_vec()
+                .collect::<Vec<(Coord, &char)>>(),
+            [
+                ((0, 2), &'i'),
+                ((1, 1), &'f'),
+                ((2, 2), &'k'),
+                ((1, 3), &'n')
+            ]
+            .to_vec()
         );
         assert_eq!(
             grid.neighbors_iter((3, 4), false)
-                .collect::<Vec<(Coord, char)>>(),
-            [((2, 4), 's'), ((3, 3), 'p')].to_vec()
+                .collect::<Vec<(Coord, &char)>>(),
+            [((2, 4), &'s'), ((3, 3), &'p')].to_vec()
         );
     }
 
@@ -343,40 +343,40 @@ mod tests {
 
         assert_eq!(
             grid.neighbors_iter((0, 0), true)
-                .collect::<Vec<(Coord, char)>>(),
-            [((1, 0), 'b'), ((1, 1), 'f'), ((0, 1), 'e')].to_vec()
+                .collect::<Vec<(Coord, &char)>>(),
+            [((1, 0), &'b'), ((1, 1), &'f'), ((0, 1), &'e')].to_vec()
         );
         assert_eq!(
             grid.neighbors_iter((2, 0), true)
-                .collect::<Vec<(Coord, char)>>(),
+                .collect::<Vec<(Coord, &char)>>(),
             [
-                ((1, 0), 'b'),
-                ((3, 0), 'd'),
-                ((3, 1), 'h'),
-                ((2, 1), 'g'),
-                ((1, 1), 'f')
+                ((1, 0), &'b'),
+                ((3, 0), &'d'),
+                ((3, 1), &'h'),
+                ((2, 1), &'g'),
+                ((1, 1), &'f')
             ]
             .to_vec()
         );
         assert_eq!(
             grid.neighbors_iter((1, 2), true)
-                .collect::<Vec<(Coord, char)>>(),
+                .collect::<Vec<(Coord, &char)>>(),
             [
-                ((0, 2), 'i'),
-                ((0, 1), 'e'),
-                ((1, 1), 'f'),
-                ((2, 1), 'g'),
-                ((2, 2), 'k'),
-                ((2, 3), 'o'),
-                ((1, 3), 'n'),
-                ((0, 3), 'm')
+                ((0, 2), &'i'),
+                ((0, 1), &'e'),
+                ((1, 1), &'f'),
+                ((2, 1), &'g'),
+                ((2, 2), &'k'),
+                ((2, 3), &'o'),
+                ((1, 3), &'n'),
+                ((0, 3), &'m')
             ]
             .to_vec()
         );
         assert_eq!(
             grid.neighbors_iter((3, 4), true)
-                .collect::<Vec<(Coord, char)>>(),
-            [((2, 4), 's'), ((2, 3), 'o'), ((3, 3), 'p')].to_vec()
+                .collect::<Vec<(Coord, &char)>>(),
+            [((2, 4), &'s'), ((2, 3), &'o'), ((3, 3), &'p')].to_vec()
         );
     }
 }
