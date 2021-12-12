@@ -221,12 +221,9 @@ impl<'a, T> Iterator for NeighborIter<'a, T> {
     type Item = (Coord, &'a T);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let coord = self.coord_iter.next();
-
-        match coord {
-            None => None,
-            Some(coord) => Some((coord, &self.grid.get(coord))),
-        }
+        self.coord_iter
+            .next()
+            .map(|coord| (coord, self.grid.get(coord)))
     }
 }
 
