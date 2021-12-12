@@ -13,11 +13,8 @@ pub fn part1(input: &Vec<&str>) -> usize {
 
 pub fn part2(input: &Vec<&str>) -> usize {
     let (graph, nodes) = parse_graph(input);
-    let mut paths = get_paths(&graph, nodes["start"], nodes["end"], true);
 
-    paths.sort_unstable();
-    paths.dedup();
-    paths.len()
+    get_paths(&graph, nodes["start"], nodes["end"], true).len()
 }
 
 fn parse_graph<'a>(input: &Vec<&'a str>) -> (PathGraph<'a>, HashMap<&'a str, NodeIndex>) {
@@ -111,6 +108,11 @@ fn get_paths(
         } else {
             stack.pop();
         }
+    }
+
+    if with_one_small_twice {
+        paths.sort_unstable();
+        paths.dedup();
     }
 
     paths
