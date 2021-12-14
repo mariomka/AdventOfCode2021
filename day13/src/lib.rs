@@ -11,7 +11,7 @@ pub fn part1(input: &Vec<&str>) -> usize {
     map.len()
 }
 
-pub fn part2(input: &Vec<&str>) {
+pub fn part2(input: &Vec<&str>) -> usize {
     let (mut map, folds) = parse_input(input);
 
     for fold in folds {
@@ -29,6 +29,8 @@ pub fn part2(input: &Vec<&str>) {
 
         println!();
     }
+
+    0
 }
 
 fn parse_input(input: &Vec<&str>) -> (HashSet<Point>, Vec<Fold>) {
