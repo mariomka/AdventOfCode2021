@@ -3,7 +3,7 @@ use regex::Regex;
 pub fn part1(input: &str) -> isize {
     let (_, p2) = parse(input);
 
-    return p2.y * (p2.y + 1) / 2;
+    p2.y * (p2.y + 1) / 2
 }
 
 pub fn part2(input: &str) -> isize {
